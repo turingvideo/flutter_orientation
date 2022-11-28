@@ -1,13 +1,12 @@
-import CoreMotion
 import Flutter
 
 let kOrientationUpdateNotificationName = Notification.Name(rawValue: "io.flutter.plugin.platform.SystemChromeOrientationNotificationName")
 let kOrientationUpdateNotificationKey = "io.flutter.plugin.platform.SystemChromeOrientationNotificationKey"
 
-public class OrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
+public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let instance = OrientationPlugin()
+        let instance = SwiftOrientationPlugin()
         let channel = FlutterMethodChannel(name: "sososdk.github.com/orientation", binaryMessenger: registrar.messenger())
         registrar.addMethodCallDelegate(instance, channel: channel)
         let eventChannel = FlutterEventChannel.init(name: "sososdk.github.com/orientationEvent", binaryMessenger: registrar.messenger())
