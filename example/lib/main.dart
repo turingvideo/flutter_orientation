@@ -18,9 +18,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  DeviceOrientation _deviceOrientation;
+  late DeviceOrientation _deviceOrientation;
 
-  StreamSubscription<DeviceOrientation> subscription;
+  StreamSubscription<DeviceOrientation>? subscription;
 
   @override
   void initState() {

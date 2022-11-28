@@ -1,5 +1,6 @@
 import UIKit
 import Flutter
+import orientation
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {

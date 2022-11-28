@@ -20,7 +20,7 @@ class OrientationHelper {
   /// [DeviceOrientation.portraitUp] is default.
   static final DeviceOrientation initOrientation = DeviceOrientation.portraitUp;
 
-  static Stream<DeviceOrientation> _onOrientationChange;
+  static Stream<DeviceOrientation>? _onOrientationChange;
 
   static Stream<DeviceOrientation> get onOrientationChange {
     if (_onOrientationChange == null) {
@@ -28,6 +28,6 @@ class OrientationHelper {
           .shareValueSeeded(initOrientation)
           .distinct((previous, next) => previous == next);
     }
-    return _onOrientationChange;
+    return _onOrientationChange!;
   }
 }
