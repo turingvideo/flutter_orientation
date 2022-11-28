@@ -28,9 +28,7 @@ public class OrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     
     @objc func onOrientationDidChange() {
         let currentOrientation = UIDevice.current.orientation.rawValue
-        
-        print("==== orientation = \(currentOrientation)")
-        
+                
         if (currentOrientation == 1) {
             eventSink?("DeviceOrientation.portraitUp")
         } else if (currentOrientation == 4) {
