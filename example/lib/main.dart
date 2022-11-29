@@ -36,6 +36,11 @@ class _MyAppState extends State<MyApp> {
       });
 
       OrientationHelper.forceOrientation(value);
+      OrientationHelper.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+        DeviceOrientation.portraitUp
+      ]);
     });
   }
 

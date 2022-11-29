@@ -44,8 +44,10 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
         let args = call.arguments;
         if (method == "SystemChrome.setPreferredOrientations" && args is [String]) {
             setPreferredOrientations(args as! [String])
+            result(nil)
         } else if (method == "SystemChrome.forceOrientation" && args is String) {
             forceOrientation(args as! String)
+            result(nil)
         } else {
             result(FlutterMethodNotImplemented);
         }
