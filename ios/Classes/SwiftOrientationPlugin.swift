@@ -82,17 +82,50 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
     }
     
     func forceOrientation(_ orientation: String) {
-        if (orientation == "DeviceOrientation.portraitUp") {
-            UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
-        } else if (orientation == "DeviceOrientation.portraitDown") {
-            UIDevice.current.setValue(UIInterfaceOrientation.portraitUpsideDown.rawValue, forKey: "orientation")
+        if #available(iOS 16.0, *) {
             
-        } else if (orientation == "DeviceOrientation.landscapeLeft") {
-            UIDevice.current.setValue(UIInterfaceOrientation.landscapeLeft.rawValue, forKey: "orientation")
-        } else if (orientation == "DeviceOrientation.landscapeRight") {
-            UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
+            var newOrientation: UIInterfaceOrientationMask?
+            
+            if orientation == "DeviceOrientation.portraitUp" {
+                newOrientation = UIInterfaceOrientationMask.portrait
+            }
+            if orientation == "DeviceOrientation.portraitDown" {
+                newOrientation = UIInterfaceOrientationMask.portraitUpsideDown
+            }
+            if orientation == "DeviceOrientation.landscapeLeft" {
+                newOrientation = UIInterfaceOrientationMask.landscapeLeft
+            }
+            if orientation == "DeviceOrientation.landscapeRight" {
+                newOrientation = UIInterfaceOrientationMask.landscapeRight
+            }
+            
+            guard let scence = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+                return
+            }
+            
+            guard let newOrientation = newOrientation else {
+                return
+            }
+            
+            let geometryPreferencesIOS = UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: newOrientation)
+
+            scence.requestGeometryUpdate(geometryPreferencesIOS) { err in
+                print(err)
+            }
+            
         } else {
-            UIDevice.current.setValue(UIInterfaceOrientation.unknown.rawValue, forKey: "orientation")
+            if (orientation == "DeviceOrientation.portraitUp") {
+                UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+            } else if (orientation == "DeviceOrientation.portraitDown") {
+                UIDevice.current.setValue(UIInterfaceOrientation.portraitUpsideDown.rawValue, forKey: "orientation")
+                
+            } else if (orientation == "DeviceOrientation.landscapeLeft") {
+                UIDevice.current.setValue(UIInterfaceOrientation.landscapeLeft.rawValue, forKey: "orientation")
+            } else if (orientation == "DeviceOrientation.landscapeRight") {
+                UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
+            } else {
+                UIDevice.current.setValue(UIInterfaceOrientation.unknown.rawValue, forKey: "orientation")
+            }
         }
     }
     
