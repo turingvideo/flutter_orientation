@@ -71,8 +71,7 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(
-                  'Running on: ${_deviceOrientation ?? 'Unknown Orientation'}\n'),
+              Text('Running on: $_deviceOrientation\n'),
               ElevatedButton(
                   child: Text('FullScreen'),
                   onPressed: () {
