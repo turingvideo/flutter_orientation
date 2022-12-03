@@ -1,8 +1,6 @@
 package com.github.sososdk.orientation;
 
 import android.app.Activity;
-import android.content.Context;
-import android.provider.Settings;
 import android.view.OrientationEventListener;
 import android.view.View;
 import androidx.annotation.Nullable;
@@ -52,23 +50,9 @@ public class MethodCallHandlerImpl implements MethodCallHandler {
       @Override
       public void onListen(Object o, final EventChannel.EventSink eventSink) {
         orientationEventListener = new OrientationEventListener(activity) {
-
           @Override
           public void onOrientationChanged(int angle) {
-            if (isScreenAutoRotate()) {
-              sendOrientationChange(eventSink, convertAngle(angle));
-            }
-          }
-
-          private boolean isScreenAutoRotate() {
-            int gravity = 0;
-            try {
-              gravity = Settings.System.getInt(activity.getContentResolver(),
-                      Settings.System.ACCELEROMETER_ROTATION);
-            } catch (Settings.SettingNotFoundException e) {
-              e.printStackTrace();
-            }
-            return gravity == 1;
+            sendOrientationChange(eventSink, convertAngle(angle));
           }
         };
         if (orientationEventListener.canDetectOrientation()) {
