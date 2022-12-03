@@ -25,6 +25,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    _deviceOrientation = DeviceOrientation.portraitUp;
     subscription = OrientationHelper.onOrientationChange.listen((value) {
       // If the widget was removed from the tree while the asynchronous platform
       // message was in flight, we want to discard the reply rather than calling
@@ -83,6 +84,20 @@ class _MyAppState extends State<MyApp> {
                     OrientationHelper.setEnabledSystemUIOverlays(
                         SystemUiOverlay.values);
                   }),
+              ElevatedButton(
+                onPressed: () {
+                  OrientationHelper.forceOrientation(
+                      DeviceOrientation.landscapeRight);
+                },
+                child: Text('Force Landscape Right'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  OrientationHelper.forceOrientation(
+                      DeviceOrientation.portraitUp);
+                },
+                child: Text('Force portraitUp'),
+              ),
               Spacer(),
               Padding(
                 padding: const EdgeInsets.all(8.0),
