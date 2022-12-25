@@ -14,6 +14,7 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
     }
     
     var eventSink: FlutterEventSink?
+    var preferredOrientations = UIInterfaceOrientationMask.all;
     
     override init() {
         super.init()
@@ -27,15 +28,23 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
     
     @objc func onOrientationDidChange() {
         let currentOrientation = UIDevice.current.orientation.rawValue
-                
+        
         if (currentOrientation == 1) {
-            eventSink?("DeviceOrientation.portraitUp")
+            if preferredOrientations.contains(.portrait) {
+                eventSink?("DeviceOrientation.portraitUp")
+            }
         } else if (currentOrientation == 4) {
-            eventSink?("DeviceOrientation.landscapeLeft")
+            if preferredOrientations.contains(.landscapeLeft) {
+                eventSink?("DeviceOrientation.landscapeLeft")
+            }
         } else if (currentOrientation == 2) {
-            eventSink?("DeviceOrientation.portraitDown")
+            if preferredOrientations.contains(.portraitUpsideDown) {
+                eventSink?("DeviceOrientation.portraitDown")
+            }
         } else if (currentOrientation == 3) {
-            eventSink?("DeviceOrientation.landscapeRight")
+            if preferredOrientations.contains(.landscapeRight) {
+                eventSink?("DeviceOrientation.landscapeRight")
+            }
         }
     }
     
@@ -76,6 +85,8 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
         if (mask.isEmpty) {
             return
         }
+        
+        preferredOrientations = mask;
                 
         NotificationCenter.default.post(name:  kOrientationUpdateNotificationName, object: nil, userInfo: [kOrientationUpdateNotificationKey : mask.rawValue])
         
