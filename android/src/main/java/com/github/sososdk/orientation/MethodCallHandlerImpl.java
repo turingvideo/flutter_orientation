@@ -243,6 +243,13 @@ public class MethodCallHandlerImpl implements MethodCallHandler {
     }
 
     private int convertAngle(int angle) {
+        // ORIENTATION_UNKNOWN is returned when the device is close to flat
+        // and the orientation cannot be determined
+        // https://developer.android.com/reference/android/view/OrientationEventListener#onOrientationChanged(int)
+        if (angle == OrientationEventListener.ORIENTATION_UNKNOWN) {
+            return SCREEN_ORIENTATION_UNSPECIFIED;
+        }
+
         if ((currentOrientation == 0 && (angle >= 300 || angle <= 60)) ||
                 (currentOrientation == 1 && (angle >= 30 && angle <= 150)) ||
                 (currentOrientation == 2 && (angle >= 120 && angle <= 240)) ||
