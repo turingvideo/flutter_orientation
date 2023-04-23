@@ -114,6 +114,8 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
                 print("scense error")
                 return
             }
+            
+            scence.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations();
                         
             guard let newOrientation = newOrientation else {
                 return

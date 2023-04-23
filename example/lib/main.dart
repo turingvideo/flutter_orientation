@@ -7,13 +7,9 @@ import './orientation_helper.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  OrientationHelper.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-    DeviceOrientation.portraitUp
-  ]);
+  OrientationHelper.setPreferredOrientations([DeviceOrientation.portraitUp]);
   OrientationHelper.setEnabledSystemUIOverlays(SystemUiOverlay.values);
-  // OrientationHelper.forceOrientation(DeviceOrientation.portraitUp);
+  OrientationHelper.forceOrientation(DeviceOrientation.portraitUp);
   runApp(MaterialApp(home: MyApp()));
 }
 
