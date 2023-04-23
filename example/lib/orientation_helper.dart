@@ -11,6 +11,8 @@ class OrientationHelper {
   static Future<void> setPreferredOrientations(
       List<DeviceOrientation> orientations) {
     return OrientationPlugin.setPreferredOrientations(orientations);
+
+    // return SystemChrome.setPreferredOrientations(orientations);
   }
 
   static Future<void> forceOrientation(DeviceOrientation orientation) {

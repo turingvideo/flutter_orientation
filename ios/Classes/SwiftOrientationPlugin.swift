@@ -1,7 +1,7 @@
 import Flutter
 
-let kOrientationUpdateNotificationName = Notification.Name(rawValue: "io.flutter.plugin.platform.SystemChromeOrientationNotificationName")
-let kOrientationUpdateNotificationKey = "io.flutter.plugin.platform.SystemChromeOrientationNotificationKey"
+public let kOrientationUpdateNotificationName = Notification.Name(rawValue: "io.flutter.plugin.platform.SystemChromeOrientationNotificationName")
+public let kOrientationUpdateNotificationKey = "io.flutter.plugin.platform.SystemChromeOrientationNotificationKey"
 
 public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
@@ -28,7 +28,7 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
     
     @objc func onOrientationDidChange() {
         let currentOrientation = UIDevice.current.orientation.rawValue
-        
+
         if (currentOrientation == 1) {
             if preferredOrientations.contains(.portrait) {
                 eventSink?("DeviceOrientation.portraitUp")
@@ -51,6 +51,7 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let method = call.method
         let args = call.arguments;
+                
         if (method == "SystemChrome.setPreferredOrientations" && args is [String]) {
             setPreferredOrientations(args as! [String])
             result(nil)
@@ -82,14 +83,13 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
             
         }
     
-        if (mask.isEmpty) {
+        if mask.isEmpty {
             return
         }
         
-        preferredOrientations = mask;
-                
+        preferredOrientations = mask
+
         NotificationCenter.default.post(name:  kOrientationUpdateNotificationName, object: nil, userInfo: [kOrientationUpdateNotificationKey : mask.rawValue])
-        
     }
     
     func forceOrientation(_ orientation: String) {
@@ -111,19 +111,21 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
             }
             
             guard let scence = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+                print("scense error")
                 return
             }
+            
+            scence.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations();
             
             guard let newOrientation = newOrientation else {
                 return
             }
             
             let geometryPreferencesIOS = UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: newOrientation)
-
             scence.requestGeometryUpdate(geometryPreferencesIOS) { err in
-                print(err)
+                print("request geometry update error \(err)")
             }
-            
+                        
         } else {
             if (orientation == "DeviceOrientation.portraitUp") {
                 UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
@@ -148,7 +150,7 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
     }
     
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        eventSink = nil;
+        eventSink = nil
         return nil
     }
 }

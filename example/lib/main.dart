@@ -7,8 +7,13 @@ import './orientation_helper.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  OrientationHelper.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  OrientationHelper.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+    DeviceOrientation.portraitUp
+  ]);
   OrientationHelper.setEnabledSystemUIOverlays(SystemUiOverlay.values);
+  // OrientationHelper.forceOrientation(DeviceOrientation.portraitUp);
   runApp(MaterialApp(home: MyApp()));
 }
 
@@ -26,23 +31,23 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _deviceOrientation = DeviceOrientation.portraitUp;
-    subscription = OrientationHelper.onOrientationChange.listen((value) {
-      // If the widget was removed from the tree while the asynchronous platform
-      // message was in flight, we want to discard the reply rather than calling
-      // setState to update our non-existent appearance.
-      if (!mounted) return;
-
-      setState(() {
-        _deviceOrientation = value;
-      });
-
-      OrientationHelper.forceOrientation(value);
-      OrientationHelper.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-        DeviceOrientation.portraitUp
-      ]);
-    });
+    // subscription = OrientationHelper.onOrientationChange.listen((value) {
+    //   // If the widget was removed from the tree while the asynchronous platform
+    //   // message was in flight, we want to discard the reply rather than calling
+    //   // setState to update our non-existent appearance.
+    //   if (!mounted) return;
+    //
+    //   setState(() {
+    //     _deviceOrientation = value;
+    //   });
+    //
+    //   OrientationHelper.forceOrientation(value);
+    //   OrientationHelper.setPreferredOrientations([
+    //     DeviceOrientation.landscapeLeft,
+    //     DeviceOrientation.landscapeRight,
+    //     DeviceOrientation.portraitUp
+    //   ]);
+    // });
   }
 
   @override
@@ -84,14 +89,22 @@ class _MyAppState extends State<MyApp> {
                         SystemUiOverlay.values);
                   }),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
+                  await OrientationHelper.setPreferredOrientations([
+                    DeviceOrientation.landscapeLeft,
+                    DeviceOrientation.landscapeRight,
+                    DeviceOrientation.portraitUp
+                  ]);
                   OrientationHelper.forceOrientation(
                       DeviceOrientation.landscapeRight);
                 },
                 child: Text('Force Landscape Right'),
               ),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
+                  await OrientationHelper.setPreferredOrientations([
+                    DeviceOrientation.portraitUp
+                  ]);
                   OrientationHelper.forceOrientation(
                       DeviceOrientation.portraitUp);
                 },
