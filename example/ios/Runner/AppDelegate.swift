@@ -5,7 +5,18 @@ import orientation
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
     
-    var isLandscape = true
+    var isLandscape = true {
+        didSet {
+            if #available(iOS 16.0, *) {
+                guard let scence = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+                    return
+                }
+                scence.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations();
+            } else {
+                // Fallback on earlier versions
+            };
+        }
+    }
     
     override func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         GeneratedPluginRegistrant.register(with: self)
