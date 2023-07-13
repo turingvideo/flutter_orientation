@@ -1,6 +1,7 @@
 package com.github.sososdk.orientation;
 
 import android.app.Activity;
+import android.os.Build;
 import android.view.OrientationEventListener;
 import android.view.View;
 
@@ -208,6 +209,9 @@ public class MethodCallHandlerImpl implements MethodCallHandler {
     }
 
     private void forceOrientation(String orientation) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (activity.isInMultiWindowMode() || activity.isInPictureInPictureMode()) return;
+        }
         if (orientation.equals("DeviceOrientation.portraitUp")) {
             activity.setRequestedOrientation(SCREEN_ORIENTATION_PORTRAIT);
         } else if (orientation.equals("DeviceOrientation.portraitDown")) {
