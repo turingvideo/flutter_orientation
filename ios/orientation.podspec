@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'orientation'
-  s.version          = '1.3.7'
+  s.version          = '1.3.8'
   s.summary          = 'A Flutter plugin for device&#x27;s orientation'
   s.description      = <<-DESC
 A Flutter plugin for device&#x27;s orientation
