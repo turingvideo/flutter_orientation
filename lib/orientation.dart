@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+export 'duo_layout.dart';
+
 class OrientationPlugin {
   static const _methodChannel =
       const MethodChannel('sososdk.github.com/orientation');

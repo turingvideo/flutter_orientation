@@ -11,6 +11,7 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
         registrar.addMethodCallDelegate(instance, channel: channel)
         let eventChannel = FlutterEventChannel.init(name: "sososdk.github.com/orientationEvent", binaryMessenger: registrar.messenger())
         eventChannel.setStreamHandler(instance)
+        DuoLayoutPlugin.register(with: registrar)
     }
     
     var eventSink: FlutterEventSink?

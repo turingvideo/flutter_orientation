@@ -1,3 +1,8 @@
+## Unreleased
+* Observe Duo closed, partially open, and fully open states, with expanded-state getters independent of navigation placement.
+* Add iPhone Duo layout queries and change notifications with automatic native registration.
+* Expose reusable layout models and a shared-listener controller without changing orientation APIs.
+
 ## 1.3.0
 * Migrate to null safety.
 
