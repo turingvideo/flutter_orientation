@@ -6,6 +6,10 @@ final class DuoLayoutPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     private var eventSink: FlutterEventSink?
     private var observerView: UIView?
     private var lastLayout: NSDictionary?
+    private var navigationMetricsController: UINavigationController?
+    private var measuringNavigation = false
+    private var publishingLayout = false
+    private var navigationMetrics: (topInset: CGFloat, height: CGFloat) = (0, 0)
 
     private init(registrar: FlutterPluginRegistrar) {
         self.registrar = registrar
@@ -48,6 +52,11 @@ final class DuoLayoutPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         eventSink = nil
         observerView?.removeFromSuperview()
         observerView = nil
+        navigationMetricsController?.willMove(toParent: nil)
+        navigationMetricsController?.view.removeFromSuperview()
+        navigationMetricsController?.removeFromParent()
+        navigationMetricsController = nil
+        navigationMetrics = (0, 0)
         lastLayout = nil
         return nil
     }
@@ -69,7 +78,9 @@ final class DuoLayoutPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     }
 
     private func publishLayout() {
-        guard let sink = eventSink else { return }
+        guard let sink = eventSink, !publishingLayout else { return }
+        publishingLayout = true
+        defer { publishingLayout = false }
         let layout = currentLayout() as NSDictionary
         guard lastLayout != layout else { return }
         lastLayout = layout
@@ -79,9 +90,11 @@ final class DuoLayoutPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     private func currentLayout() -> [String: Any] {
         var layout: [String: Any] = [
             "edge": "none", "topObstruction": 0.0, "bottomObstruction": 0.0,
-            "hingeStatus": "unknown"
+            "hingeStatus": "unknown", "navigationBarTopInset": 0.0,
+            "navigationBarHeight": 0.0
         ]
-        guard #available(iOS 27.1, *), let view = registrar.viewController?.view,
+        guard #available(iOS 27.1, *), let host = registrar.viewController,
+              let view = host.viewIfLoaded,
               view.window != nil else { return layout }
         layout["hingeStatus"] = (observerView as? DuoLayoutObserverView)?.hingeStatus ?? "unknown"
         let isRTL = view.effectiveUserInterfaceLayoutDirection == .rightToLeft
@@ -111,7 +124,46 @@ final class DuoLayoutPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         layout["edge"] = edge
         layout["topObstruction"] = top
         layout["bottomObstruction"] = bottom
+        let metrics = measureNavigationBar(in: host)
+        layout["navigationBarTopInset"] = metrics.topInset
+        layout["navigationBarHeight"] = metrics.height
         return layout
+    }
+
+    private func measureNavigationBar(in host: UIViewController) -> (topInset: CGFloat, height: CGFloat) {
+        guard !measuringNavigation, let hostView = host.viewIfLoaded else { return navigationMetrics }
+        measuringNavigation = true
+        defer { measuringNavigation = false }
+
+        let controller: UINavigationController
+        if let existing = navigationMetricsController {
+            controller = existing
+        } else {
+            // A standalone UINavigationBar does not receive Duo's container layout.
+            let content = UIViewController()
+            content.title = "Title"
+            content.navigationItem.largeTitleDisplayMode = .never
+            controller = UINavigationController(rootViewController: content)
+            controller.navigationBar.prefersLargeTitles = false
+            host.addChild(controller)
+            controller.view.isHidden = true
+            controller.view.isUserInteractionEnabled = false
+            controller.view.accessibilityElementsHidden = true
+            controller.view.frame = hostView.bounds
+            controller.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            hostView.insertSubview(controller.view, at: 0)
+            controller.didMove(toParent: host)
+            navigationMetricsController = controller
+        }
+
+        controller.view.frame = hostView.bounds
+        controller.view.layoutIfNeeded()
+        let frame = controller.navigationBar.convert(controller.navigationBar.bounds, to: hostView)
+        if frame.minY.isFinite, frame.height.isFinite, frame.height > 0,
+           frame.height < hostView.bounds.height / 2 {
+            navigationMetrics = (max(0, frame.minY), frame.height)
+        }
+        return navigationMetrics
     }
 }
 

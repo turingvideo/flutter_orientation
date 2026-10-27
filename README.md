@@ -40,6 +40,14 @@ The host app still owns navigation widgets, fullscreen behavior, and content
 safe-area handling. `NavigationEdge.none` means horizontal navigation is preferred
 in the current layout; it is not a device-model check.
 
+`navigationBarTopInset` and `navigationBarHeight` describe the system's compact
+horizontal title bar while controls use the side strip. They are measured with
+a hidden UIKit navigation container using the host view's bounds and traits;
+the plugin does not display a native bar or replace the app's navigation stack.
+Their sum is the top content boundary. Do not add the top safe area again.
+The metrics update with native layout changes and are zero when unavailable,
+including older plugin binaries and layouts without vertical navigation.
+
 ### Opening and closing
 
 The same controller notifies listeners when `hingeStatus` changes, even if the

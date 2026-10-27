@@ -15,12 +15,19 @@ class DuoLayout {
   final NavigationEdge edge;
   final double topObstruction;
   final double bottomObstruction;
+
+  /// System navigation bar origin and height, in the host view's coordinates.
+  /// Both are zero when native metrics are unavailable.
+  final double navigationBarTopInset;
+  final double navigationBarHeight;
   final DuoHingeStatus hingeStatus;
 
   const DuoLayout({
     this.edge = NavigationEdge.none,
     this.topObstruction = 0,
     this.bottomObstruction = 0,
+    this.navigationBarTopInset = 0,
+    this.navigationBarHeight = 0,
     this.hingeStatus = DuoHingeStatus.unknown,
   });
 
@@ -46,6 +53,8 @@ class DuoLayout {
       },
       topObstruction: inset(data['topObstruction']),
       bottomObstruction: inset(data['bottomObstruction']),
+      navigationBarTopInset: inset(data['navigationBarTopInset']),
+      navigationBarHeight: inset(data['navigationBarHeight']),
       hingeStatus: switch (data['hingeStatus']) {
         'closed' => DuoHingeStatus.closed,
         'partiallyOpen' => DuoHingeStatus.partiallyOpen,
@@ -61,11 +70,13 @@ class DuoLayout {
       edge == other.edge &&
       topObstruction == other.topObstruction &&
       bottomObstruction == other.bottomObstruction &&
+      navigationBarTopInset == other.navigationBarTopInset &&
+      navigationBarHeight == other.navigationBarHeight &&
       hingeStatus == other.hingeStatus;
 
   @override
-  int get hashCode =>
-      Object.hash(edge, topObstruction, bottomObstruction, hingeStatus);
+  int get hashCode => Object.hash(edge, topObstruction, bottomObstruction,
+      navigationBarTopInset, navigationBarHeight, hingeStatus);
 }
 
 /// Observes iOS Duo layout and hinge changes without choosing an app's UI.

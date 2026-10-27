@@ -94,6 +94,55 @@ void main() {
     },
   );
 
+  test('parses optional native navigation metrics and rejects invalid values',
+      () {
+    final layout = DuoLayout.fromPlatform({
+      'navigationBarTopInset': 24,
+      'navigationBarHeight': 58,
+    });
+    expect(layout.navigationBarTopInset, 24);
+    expect(layout.navigationBarHeight, 58);
+    expect(layout,
+        const DuoLayout(navigationBarTopInset: 24, navigationBarHeight: 58));
+    expect(layout, isNot(const DuoLayout()));
+    for (final invalid in [-1, double.infinity, double.nan, '58', null]) {
+      expect(
+        DuoLayout.fromPlatform({
+          'navigationBarTopInset': invalid,
+          'navigationBarHeight': invalid,
+        }),
+        const DuoLayout(),
+      );
+    }
+  });
+
+  test('navigation metric changes notify without an edge or hinge change',
+      () async {
+    messenger.setMockMethodCallHandler(
+      DuoLayoutController.methodChannel,
+      (_) async => {'edge': 'right', 'hingeStatus': 'closed'},
+    );
+    final controller = DuoLayoutController(platform: TargetPlatform.iOS);
+    await controller.start();
+    await Future<void>.delayed(Duration.zero);
+    var changes = 0;
+    controller.addListener(() => changes++);
+    final data = {
+      'edge': 'right',
+      'hingeStatus': 'closed',
+      'navigationBarTopInset': 24,
+      'navigationBarHeight': 58,
+    };
+    await sendEvent(data);
+    await sendEvent(data);
+    expect(changes, 1);
+    expect(controller.value.navigationBarHeight, 58);
+    await sendEvent({...data, 'navigationBarHeight': 64});
+    expect(changes, 2);
+    expect(controller.value.navigationBarHeight, 64);
+    controller.dispose();
+  });
+
   test('parses hinge states independently of the navigation edge', () {
     for (final status in DuoHingeStatus.values) {
       final layout = DuoLayout.fromPlatform({'hingeStatus': status.name});
