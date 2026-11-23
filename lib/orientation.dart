@@ -13,6 +13,21 @@ class OrientationPlugin {
   static const _eventChannel =
       const EventChannel('sososdk.github.com/orientationEvent');
 
+  /// Requests [orientation] after entering Duo's inner display and its window
+  /// has settled. This is a per-entry preference, not a persistent rotation lock.
+  /// Explicit fullscreen requests take priority. Pass null to remove the policy.
+  /// Keep portrait and landscape allowed; this method does not narrow the mask.
+  /// Programmatic inner-display rotation requires compatible iOS window settings.
+  /// Has no effect on Android or non-Duo iPhones.
+  static Future<void> setDuoInnerOrientation(
+      DeviceOrientation? orientation) async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
+    await _methodChannel.invokeMethod<void>(
+      'SystemChrome.setDuoInnerOrientation',
+      orientation?.toString(),
+    );
+  }
+
   /// see [SystemChrome.setEnabledSystemUIOverlays]
   static Future<void> setEnabledSystemUIOverlays(
       List<SystemUiOverlay> overlays) async {

@@ -11,11 +11,20 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
         registrar.addMethodCallDelegate(instance, channel: channel)
         let eventChannel = FlutterEventChannel.init(name: "sososdk.github.com/orientationEvent", binaryMessenger: registrar.messenger())
         eventChannel.setStreamHandler(instance)
-        DuoLayoutPlugin.register(with: registrar)
+        instance.hostViewController = { registrar.viewController }
+        let duoLayout = DuoLayoutPlugin.registerInstance(with: registrar)
+        instance.duoLayout = duoLayout
+        duoLayout.onInnerOrientationRequest = { [weak instance] orientation in
+            guard let instance = instance else { return }
+            // Preserve broad orientation support to avoid a narrow compatibility window.
+            instance.forceOrientation(orientation)
+        }
     }
     
     var eventSink: FlutterEventSink?
     var preferredOrientations = UIInterfaceOrientationMask.all;
+    private var duoLayout: DuoLayoutPlugin?
+    private var hostViewController: (() -> UIViewController?)?
     
     override init() {
         super.init()
@@ -54,10 +63,22 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
         let args = call.arguments;
                 
         if (method == "SystemChrome.setPreferredOrientations" && args is [String]) {
+            duoLayout?.cancelPendingInnerOrientation(ifConflictingWith: args as! [String])
             setPreferredOrientations(args as! [String])
             result(nil)
         } else if (method == "SystemChrome.forceOrientation" && args is String) {
+            duoLayout?.cancelPendingInnerOrientation(ifConflictingWith: [args as! String])
             forceOrientation(args as! String)
+            result(nil)
+        } else if method == "SystemChrome.setDuoInnerOrientation" {
+            let orientation = args as? String
+            let valid = ["DeviceOrientation.portraitUp", "DeviceOrientation.portraitDown",
+                         "DeviceOrientation.landscapeLeft", "DeviceOrientation.landscapeRight"]
+            guard args == nil || args is NSNull || orientation.map(valid.contains) == true else {
+                result(FlutterError(code: "invalid_orientation", message: "Unknown inner orientation", details: nil))
+                return
+            }
+            duoLayout?.setInnerOrientation(orientation)
             result(nil)
         } else {
             result(FlutterMethodNotImplemented);
@@ -111,7 +132,7 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
                 newOrientation = UIInterfaceOrientationMask.landscapeRight
             }
             
-            guard let scence = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+            guard let scence = hostViewController?()?.viewIfLoaded?.window?.windowScene else {
                 print("scense error")
                 return
             }
@@ -124,7 +145,9 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
             
             let geometryPreferencesIOS = UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: newOrientation)
             scence.requestGeometryUpdate(geometryPreferencesIOS) { err in
-                print("request geometry update error \(err)")
+                let error = err as NSError
+                NSLog("Orientation geometry request rejected: %@ (%@/%ld)",
+                      error.localizedDescription, error.domain, error.code)
             }
                         
         } else {
@@ -142,7 +165,7 @@ public class SwiftOrientationPlugin: NSObject, FlutterPlugin, FlutterStreamHandl
             }
         }
     }
-    
+
     // FlutterStreamHandler
     
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {

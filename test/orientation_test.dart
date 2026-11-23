@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orientation/orientation.dart';
@@ -19,6 +20,7 @@ void main() {
   });
 
   tearDown(() {
+    debugDefaultTargetPlatformOverride = null;
     messenger.setMockMethodCallHandler(channel, null);
     messenger.setMockMethodCallHandler(events, null);
   });
@@ -41,6 +43,29 @@ void main() {
     await OrientationPlugin.forceOrientation(DeviceOrientation.landscapeLeft);
     expect(calls.single.method, 'SystemChrome.forceOrientation');
     expect(calls.single.arguments, 'DeviceOrientation.landscapeLeft');
+  });
+
+  test('Duo inner orientation policy can be configured and cleared on iOS',
+      () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    await OrientationPlugin.setDuoInnerOrientation(
+        DeviceOrientation.portraitUp);
+    await OrientationPlugin.setDuoInnerOrientation(null);
+    expect(calls.map((call) => call.method), [
+      'SystemChrome.setDuoInnerOrientation',
+      'SystemChrome.setDuoInnerOrientation',
+    ]);
+    expect(calls.first.arguments, 'DeviceOrientation.portraitUp');
+    expect(calls.last.arguments, isNull);
+  });
+
+  test('Duo inner orientation policy does not call Android native code',
+      () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    await OrientationPlugin.setDuoInnerOrientation(
+        DeviceOrientation.portraitUp);
+    await OrientationPlugin.setDuoInnerOrientation(null);
+    expect(calls, isEmpty);
   });
 
   test('orientation events remain independent from Duo events', () async {

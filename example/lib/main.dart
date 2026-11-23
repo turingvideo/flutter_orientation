@@ -1,121 +1,75 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:orientation/orientation.dart';
 
-import './orientation_helper.dart';
+const supportedOrientations = [
+  DeviceOrientation.portraitUp,
+  DeviceOrientation.landscapeLeft,
+  DeviceOrientation.landscapeRight,
+];
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  OrientationHelper.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  OrientationHelper.setEnabledSystemUIOverlays(SystemUiOverlay.values);
-  OrientationHelper.forceOrientation(DeviceOrientation.portraitUp);
-  runApp(MaterialApp(home: MyApp()));
+  await OrientationPlugin.setPreferredOrientations(supportedOrientations);
+  runApp(const MaterialApp(home: MyApp()));
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   @override
-  _MyAppState createState() => _MyAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  late DeviceOrientation _deviceOrientation;
-
-  StreamSubscription<DeviceOrientation>? subscription;
+  final layout = DuoLayoutController();
+  DeviceOrientation requested = DeviceOrientation.portraitUp;
 
   @override
   void initState() {
     super.initState();
-    _deviceOrientation = DeviceOrientation.portraitUp;
-    // subscription = OrientationHelper.onOrientationChange.listen((value) {
-    //   // If the widget was removed from the tree while the asynchronous platform
-    //   // message was in flight, we want to discard the reply rather than calling
-    //   // setState to update our non-existent appearance.
-    //   if (!mounted) return;
-    //
-    //   setState(() {
-    //     _deviceOrientation = value;
-    //   });
-    //
-    //   OrientationHelper.forceOrientation(value);
-    //   OrientationHelper.setPreferredOrientations([
-    //     DeviceOrientation.landscapeLeft,
-    //     DeviceOrientation.landscapeRight,
-    //     DeviceOrientation.portraitUp
-    //   ]);
-    // });
+    layout.start();
+    OrientationPlugin.setDuoInnerOrientation(DeviceOrientation.portraitUp);
+  }
+
+  Future<void> request(DeviceOrientation orientation) async {
+    await OrientationPlugin.setPreferredOrientations(supportedOrientations);
+    await OrientationPlugin.forceOrientation(orientation);
+    if (mounted) setState(() => requested = orientation);
   }
 
   @override
   void dispose() {
-    _dispose();
+    layout.dispose();
+    OrientationPlugin.setDuoInnerOrientation(null);
     super.dispose();
-  }
-
-  // https://github.com/flutter/flutter/issues/28134
-  void _dispose() {
-    subscription?.cancel();
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () {
-        _dispose();
-        return Future.value(true);
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Orientation Example'),
+    final size = MediaQuery.sizeOf(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Orientation Example')),
+      body: ListView(padding: const EdgeInsets.all(16), children: [
+        Text('Requested: ${requested.name}'),
+        Text('Window: ${size.width.toInt()} x ${size.height.toInt()} '
+            '${MediaQuery.orientationOf(context).name}'),
+        ValueListenableBuilder<DuoLayout>(
+          valueListenable: layout,
+          builder: (_, value, __) => Text('Hinge: ${value.hingeStatus.name}'),
         ),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text('Running on: $_deviceOrientation\n'),
-              ElevatedButton(
-                  child: Text('FullScreen'),
-                  onPressed: () {
-                    OrientationHelper.setEnabledSystemUIOverlays([]);
-                  }),
-              ElevatedButton(
-                  child: Text('NormalScreen'),
-                  onPressed: () {
-                    OrientationHelper.setEnabledSystemUIOverlays(
-                        SystemUiOverlay.values);
-                  }),
-              ElevatedButton(
-                onPressed: () async {
-                  await OrientationHelper.setPreferredOrientations([
-                    DeviceOrientation.landscapeLeft,
-                    DeviceOrientation.landscapeRight,
-                    DeviceOrientation.portraitUp
-                  ]);
-                  OrientationHelper.forceOrientation(
-                      DeviceOrientation.landscapeRight);
-                },
-                child: Text('Force Landscape Right'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  await OrientationHelper.setPreferredOrientations([
-                    DeviceOrientation.portraitUp
-                  ]);
-                  OrientationHelper.forceOrientation(
-                      DeviceOrientation.portraitUp);
-                },
-                child: Text('Force portraitUp'),
-              ),
-              Spacer(),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                    'Flutter is Google’s UI toolkit for building beautiful, natively compiled applications for mobile, web, and desktop from a single codebase.'),
-              ),
-            ],
+        const SizedBox(height: 16),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          ElevatedButton(
+            onPressed: () => request(DeviceOrientation.landscapeRight),
+            child: const Text('Landscape Right'),
           ),
-        ),
-      ),
+          ElevatedButton(
+            onPressed: () => request(DeviceOrientation.portraitUp),
+            child: const Text('Portrait'),
+          ),
+        ]),
+      ]),
     );
   }
 }

@@ -67,6 +67,38 @@ window's actual layout constraints for responsive UI, not hinge status as a
 replacement for available space. See Apple's
 [UIHingeInteraction documentation](https://developer.apple.com/documentation/uikit/uihingeinteraction).
 
+### Inner-display entry orientation
+
+Keep broad orientation support, then configure a per-entry preference:
+
+```dart
+await OrientationPlugin.setPreferredOrientations([
+  DeviceOrientation.portraitUp,
+  DeviceOrientation.landscapeLeft,
+  DeviceOrientation.landscapeRight,
+]);
+await OrientationPlugin.setDuoInnerOrientation(DeviceOrientation.portraitUp);
+// Remove the preference when it is no longer needed.
+await OrientationPlugin.setDuoInnerOrientation(null);
+```
+
+The native plugin waits for a fully open hinge and an active regular/regular
+host window, then requires two matching geometry samples one second apart.
+It stops sampling after applying the preference or after ten seconds. Repeated
+hinge/layout updates do not reapply it. Explicit conflicting requests (such as
+fullscreen video) cancel the pending entry preference until a matching direction
+is restored and the device is opened again.
+
+The iOS 27.1 Duo simulator supports programmatic inner-display rotation with
+`UIRequiresFullScreen = true` and broad orientation support in both Info.plist
+and the host controller/AppDelegate. Keep that support when returning to portrait;
+restricting the mask to portrait alone can create a narrow compatibility window.
+The example includes this configuration. Physical hardware has not been verified.
+
+This is an entry request, not a persistent rotation lock. The policy has no effect
+on non-Duo devices or Android and does not modify compatibility settings. UIKit
+can reject geometry requests in unsupported windowing modes.
+
 Controllers share the native event stream. Disposing one controller does not
 stop another controller's updates. Android, iOS below 27.1, and hosts with an older
 native plugin keep the default layout without changing the existing orientation

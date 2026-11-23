@@ -10,6 +10,11 @@ final class DuoLayoutPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     private var measuringNavigation = false
     private var publishingLayout = false
     private var navigationMetrics: (topInset: CGFloat, height: CGFloat) = (0, 0)
+    private var innerOrientation: String?
+    var onInnerOrientationRequest: ((String) -> Void)?
+    private lazy var orientationPolicy = DuoInnerOrientationPolicy(
+        host: { [weak self] in self?.registrar.viewController },
+        request: { [weak self] orientation in self?.onInnerOrientationRequest?(orientation) })
 
     private init(registrar: FlutterPluginRegistrar) {
         self.registrar = registrar
@@ -17,6 +22,10 @@ final class DuoLayoutPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     }
 
     static func register(with registrar: FlutterPluginRegistrar) {
+        _ = registerInstance(with: registrar)
+    }
+
+    static func registerInstance(with registrar: FlutterPluginRegistrar) -> DuoLayoutPlugin {
         let plugin = DuoLayoutPlugin(registrar: registrar)
         let methods = FlutterMethodChannel(
             name: "sososdk.github.com/orientation/duoLayout", binaryMessenger: registrar.messenger())
@@ -25,6 +34,20 @@ final class DuoLayoutPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
             name: "sososdk.github.com/orientation/duoLayoutEvent", binaryMessenger: registrar.messenger())
         events.setStreamHandler(plugin)
         registrar.publish(plugin)
+        return plugin
+    }
+
+    func setInnerOrientation(_ orientation: String?) {
+        guard #available(iOS 27.1, *) else { return }
+        innerOrientation = orientation
+        orientationPolicy.configure(orientation)
+        if orientation != nil { attachObserver() }
+        if orientation == nil, eventSink == nil { _ = onCancel(withArguments: nil) }
+    }
+
+    func cancelPendingInnerOrientation(ifConflictingWith orientations: [String]) {
+        guard innerOrientation != nil else { return }
+        orientationPolicy.cancelIfConflicting(with: orientations)
     }
 
     func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -50,6 +73,8 @@ final class DuoLayoutPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
     func onCancel(withArguments arguments: Any?) -> FlutterError? {
         eventSink = nil
+        // Keep receiving screen/hinge changes while a native policy is configured.
+        if innerOrientation != nil { return nil }
         observerView?.removeFromSuperview()
         observerView = nil
         navigationMetricsController?.willMove(toParent: nil)
@@ -78,6 +103,10 @@ final class DuoLayoutPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     }
 
     private func publishLayout() {
+        if #available(iOS 27.1, *), innerOrientation != nil {
+            orientationPolicy.update(
+                hingeStatus: (observerView as? DuoLayoutObserverView)?.hingeStatus ?? "unknown")
+        }
         guard let sink = eventSink, !publishingLayout else { return }
         publishingLayout = true
         defer { publishingLayout = false }
